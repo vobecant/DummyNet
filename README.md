@@ -11,7 +11,16 @@ to create and activate the new conda environment.
 
 ## Data
 Please download sample data from https://data.ciirc.cvut.cz/public/projects/DummyNet/ and extract it to `./data`. 
+```
+wget https://data.ciirc.cvut.cz/public/projects/DummyNet/data.tar.gz
+mkdir data
+tar -zxvf data.tar.gz --directory data
+```
 Then, please extract the weights in `./data/weights` folder.
+```
+cd data/weights
+tar -zxvf DummyNetAAAI_files.tar.gz
+```
 
 The structure of the ./data folder should be:
 ```
@@ -27,3 +36,11 @@ data/
 ```
 
 ## Run example
+To augment the CityPersons datasets, run:
+```
+python augment_cs.py ./data/weights/ ${CITYSCAPES_DIR} ${SAVE_DIR}
+```
+The script takes three arguments:
+- `weights_dir`: path to the directory with weights
+- `CITYSCAES_DIR`: path to the directory with Cityscapes dataset and CityPersons dataset
+- `SAVE_DIR`: directory where the extended dataset will be saved
