@@ -36,6 +36,16 @@ data/
 ```
 
 ## Run example
+
+### NightOwls
+To augment the NightOwls dataset, run:
+```
+python augment_nightowls.py ./data/weights ${SAVE_DIR} ./data/YBB/nightowls_bbs
+```
+The script takes three arguments. You need to set
+- `SAVE_DIR`: directory where the extended dataset will be saved
+
+### CityPersons
 To augment the CityPersons datasets, run:
 ```
 python augment_cs.py ./data/weights/ ${CITYSCAPES_DIR} ${SAVE_DIR}
