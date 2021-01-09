@@ -63,7 +63,8 @@ def xyxy2xywh(bbs):
 
 
 class PositionProposer:
-    def __init__(self, gen_input_size, ground_labels=(6, 7, 8, 9), height_coefs=None,
+    def __init__(self, gen_input_size, ground_labels=(6, 7, 8, 9),
+                 height_coefs={'x_mu': 0.5, 'x_std': 0.24, 'y_mu': 0.5, 'y_std': 0.07},
                  xyxy_boxes=False, max_size=None, occlusion_classes=None, min_height=None, max_height=None,
                  insert2empty=False, ecp=False):
         self.gen_input_size = gen_input_size
@@ -342,9 +343,9 @@ class PositionProposer:
     def get_random_position(self, im_h, im_w):
         height = -1
         while height < 0:
-            x = np.random.normal(loc=self.height_coefs['x_mu'], scale=self.height_coefs['x_std'])
+            x = np.random.normal(loc=self.height_coefs['x_mu'], scale=self.height_coefs['x_std']) * im_w
             x = int(max([im_w * 0.2, min([x, im_w * 0.8])]))
-            y = np.random.normal(loc=self.height_coefs['y_mu'], scale=self.height_coefs['y_std'])
+            y = np.random.normal(loc=self.height_coefs['y_mu'], scale=self.height_coefs['y_std']) * im_h
             y = int(max([im_h // 10, min([y, im_h // 2])]))
             height = self.height_fnc(y / im_h) * im_h
         return x, y, height
@@ -354,7 +355,11 @@ class PositionProposer:
         sk_height = max(msk_y) - min(msk_y)
         sk_width = max(msk_x) - min(msk_x)
 
-        im_h, im_w, _ = image.shape
+        shape = image.shape
+        if shape[0] == 3:
+            _, im_h, im_w = shape
+        else:
+            im_h, im_w, _ = shape
 
         # next to some pedestrian
         positions_nearby = self.choose_nearby(None, objects_all, person_mask, im_h_given=im_h, im_w_given=im_w)
