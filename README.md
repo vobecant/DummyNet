@@ -10,13 +10,13 @@ conda activate DummyNet
 to create and activate the new conda environment.
 
 ## Data
-Please download sample data from https://data.ciirc.cvut.cz/public/projects/DummyNet/ and extract it to `./data`. 
+First, please download sample data and extract it to `./data`. 
 ```
 wget https://data.ciirc.cvut.cz/public/projects/DummyNet/data.tar.gz
 mkdir data
 tar -zxvf data.tar.gz --directory data
 ```
-Then, please extract the weights in `./data/weights` folder.
+Then, extract the weights in `./data/weights` folder.
 ```
 cd data/weights
 tar -zxvf DummyNetAAAI_files.tar.gz
