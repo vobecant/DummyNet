@@ -2,8 +2,12 @@
 Official implementation of paper "Artificial Dummies for Urban Dataset Augmentation". [[arXiv paper]](https://arxiv.org/abs/2012.08274)
 
 ## Setup
+**Note**: the code is tested only on Linux distributions.
+
 Run
 ```
+git clone https://github.com/vobecant/DummyNet.git
+cd DummyNet
 conda env create -f environment.yml
 conda activate DummyNet
 ```
