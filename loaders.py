@@ -1,9 +1,41 @@
 import json
 import os
+import pickle
 from collections import namedtuple
 
+import torch
 import torch.utils.data as data
 from PIL import Image
+from torchvision.transforms import ToTensor
+
+
+class SampleLoader(data.Dataset):
+    def __init__(self, samples_dir='./data/YBB/val_samples_small.pkl'):
+        with open(samples_dir, 'rb') as f:
+            self.samples = pickle.load(f)
+        self.to_tensor = ToTensor()
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, item):
+        sample = self.samples[item]
+
+        image_npy = sample['image']
+        mask_npy = sample['mask']
+        keypoints_npy = sample['keypoints']
+
+        assert image_npy.max() > 1.0, image_npy.max()
+        image_t = self.to_tensor(image_npy).float()
+        orig_mask_t = torch.from_numpy(mask_npy).clamp_(0, 1).unsqueeze(0).float()
+        keypoints_t = torch.from_numpy(keypoints_npy).clamp_(0, 1).float()
+
+        assert image_t.max() <= 1.0, image_t.max()
+        assert orig_mask_t.max() <= 1.0, orig_mask_t.max()
+        assert keypoints_t.max() <= 1.0, keypoints_t.max()
+
+        data = {'image': image_t, 'mask': orig_mask_t, 'keypoints': keypoints_t}
+        return data
 
 
 class Cityscapes(data.Dataset):
@@ -133,7 +165,7 @@ class Cityscapes(data.Dataset):
             target_dir = os.path.join(self.targets_dir, city)
             for file_name in os.listdir(img_dir):
                 ext = file_name.split('.')[-1]
-                if ext not in ['jpg','png']:
+                if ext not in ['jpg', 'png']:
                     continue
                 target_types = []
                 for t in self.target_type:
@@ -178,7 +210,6 @@ class Cityscapes(data.Dataset):
 
         return path, image, target
 
-
     def __len__(self):
         return len(self.images)
 
@@ -209,3 +240,7 @@ class Cityscapes(data.Dataset):
             return '{}_color.png'.format(mode)
         else:
             return '{}_polygons.json'.format(mode)
+
+
+def get_loader(cs_dir, target_type):
+    return Cityscapes(cs_dir, target_type='semantic')

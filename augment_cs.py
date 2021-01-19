@@ -8,12 +8,11 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import ToTensor, ToPILImage
 from torchvision.utils import save_image
 
-from inference_utils import load_networks, estimate_mask, encode_appearance
+from inference_utils import load_networks, encode_appearance
 from loaders import Cityscapes
 from models.DummyGAN import KeypointsDownsampler
 from position_proposer import PositionProposer
@@ -72,10 +71,11 @@ if __name__ == '__main__':
     ybb_loader = iter(DataLoader(dataset, batch_size=1, shuffle=True))
 
     cityscapes_loader = Cityscapes(cs_dir, target_type='semantic')
+    loader = iter(DataLoader(cityscapes_loader[1], batch_size=1, shuffle=False))
 
     start = time.time()
 
-    for sample_id, sample in enumerate(cityscapes_loader, 1):
+    for sample_id, sample in enumerate(cityscapes_loader[0], 1):
         if START_SAMPLE_ID and sample_id < START_SAMPLE_ID:
             continue
         if END_SAMPLE_ID and sample_id == END_SAMPLE_ID:
@@ -125,13 +125,21 @@ if __name__ == '__main__':
             fname_segm = os.path.join(labels_dir_city, image_name.replace('_leftImg8bit.png', '_gtFine_labelIds.png'))
             fname_bbox = os.path.join(bboxes_dir_city, os.path.split(bb_path)[1])
 
-            ybb_sample = next(ybb_loader)
-            keypoints = ybb_sample['mask_keypoint'].to(device)
-            person = ybb_sample['image'].to(device)
+            try:
+                conditioned_sample = next(loader)
+            except StopIteration:
+                loader = iter(DataLoader(dataset, batch_size=1, shuffle=False))
+                conditioned_sample = next(loader)
+            keypoints = conditioned_sample['keypoints'].to(device)
+            skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
+            person = conditioned_sample['image'].to(device)
+            mask = conditioned_sample['mask'].to(device)
+            sk_y, sk_x = np.where(skeleton)
+
             with torch.no_grad():
-                mask = estimate_mask(mask_estimator, me_input_resizer, keypoints)
-                mask = F.interpolate(mask, keypoints.shape[-2:], mode='bilinear')
-                skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
+                # mask = estimate_mask(mask_estimator, me_input_resizer, keypoints)
+                # mask = F.interpolate(mask, keypoints.shape[-2:], mode='bilinear')
+                # skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
                 proposal = position_proposer(image, segmentation, objects_orig, objects_all, skeleton,
                                              mask.squeeze().cpu().numpy())
                 if proposal is None:
@@ -161,7 +169,7 @@ if __name__ == '__main__':
                 masked_bg = bg * (1 - mask)
                 cond_input = torch.cat((masked_bg, keypoints), dim=1)
                 gen_output = generator(cond_input, z, depth=4, alpha=1.0)
-                #mask = mask**3
+                # mask = mask**3
                 gen_scene = gen_output * mask + bg * (1 - mask)
                 gen_scene_npy = np.asarray(to_pil(gen_scene[0].to('cpu')))
 
