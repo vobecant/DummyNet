@@ -10,7 +10,7 @@ from models.MaskEstimator import MaskEstimator
 from models.networks import VAE_enc_only
 
 
-def load_networks(saves_path):
+def load_networks(saves_path, v2=False):
     args_file = None
     for fname in os.listdir(saves_path):
         if '_opts.txt' in fname:
@@ -30,7 +30,7 @@ def load_networks(saves_path):
     args.save_dir = '{}{}'.format(args.save_dir, args.name)
     last_depth = int(args.depth) - 1
 
-    gen_save_file = os.path.join(saves_path, "GAN_GEN_{}.pth".format(last_depth))
+    gen_save_file = os.path.join(saves_path, "GAN_GEN_{}{}.pth".format(last_depth, '_v2' if v2 else ''))
     mask_estimator_save_file = os.path.join(saves_path, "BLENDING_{}.pth".format(last_depth))
     encoder_save_file = os.path.join(saves_path, "ENCODER_{}.pth".format(last_depth))
 

@@ -13,7 +13,7 @@ from torchvision.transforms import ToTensor, ToPILImage
 from torchvision.utils import save_image
 
 from inference_utils import load_networks, encode_appearance
-from loaders import Cityscapes
+from loaders import get_loader
 from models.DummyGAN import KeypointsDownsampler
 from position_proposer import PositionProposer
 
@@ -45,16 +45,16 @@ class SimpleLoader(Dataset):
 
 if __name__ == '__main__':
 
-    nets_dir = sys.argv[1]  # /home/vobecant/PhD/DummyGAN_ECCV/trained_models/DummyGAN_5depth_complete_cudnn
-    cs_dir = sys.argv[2]  # /home/vobecant/datasets/cityscapes
-    save_dir = sys.argv[3]  # /home/vobecant/datasets/DummyGAN_cityscapes_noFine
+    nets_dir = sys.argv[1]
+    cs_dir = sys.argv[2]
+    save_dir = sys.argv[3]
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     to_tensor = ToTensor()
     to_pil = ToPILImage()
 
     # load arguments and networks
-    args, generator, encoder, mask_estimator = load_networks(nets_dir)
+    args, generator, encoder, mask_estimator = load_networks(nets_dir, True)
     me_input_resizer = KeypointsDownsampler(tgt_size=64, mode='bilinear')
     generator.eval()
     generator.to(device)
@@ -70,8 +70,8 @@ if __name__ == '__main__':
     dataset = SimpleLoader(data_file='./data/YBB/test_samples_100.th')
     ybb_loader = iter(DataLoader(dataset, batch_size=1, shuffle=True))
 
-    cityscapes_loader = Cityscapes(cs_dir, target_type='semantic')
-    loader = iter(DataLoader(cityscapes_loader[1], batch_size=1, shuffle=False))
+    cityscapes_loader = get_loader(cs_dir, target_type='semantic')
+    loader = iter(DataLoader(cityscapes_loader[1], batch_size=1, shuffle=True))
 
     start = time.time()
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
             try:
                 conditioned_sample = next(loader)
             except StopIteration:
-                loader = iter(DataLoader(dataset, batch_size=1, shuffle=False))
+                loader = iter(DataLoader(dataset, batch_size=1, shuffle=True))
                 conditioned_sample = next(loader)
             keypoints = conditioned_sample['keypoints'].to(device)
             skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()

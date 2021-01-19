@@ -243,4 +243,4 @@ class Cityscapes(data.Dataset):
 
 
 def get_loader(cs_dir, target_type):
-    return Cityscapes(cs_dir, target_type='semantic')
+    return Cityscapes(cs_dir, target_type=target_type), SampleLoader()
