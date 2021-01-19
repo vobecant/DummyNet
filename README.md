@@ -1,22 +1,26 @@
 # DummyNet
-Official implementation of paper "Artificial Dummies for Urban Dataset Augmentation"
+Official implementation of paper "Artificial Dummies for Urban Dataset Augmentation". [[arXiv paper]](https://arxiv.org/abs/2012.08274)
 
 ## Setup
+**Note**: the code is tested only on Linux distributions.
+
 Run
 ```
+git clone https://github.com/vobecant/DummyNet.git
+cd DummyNet
 conda env create -f environment.yml
 conda activate DummyNet
 ```
 to create and activate the new conda environment.
 
 ## Data
-Please download sample data from https://data.ciirc.cvut.cz/public/projects/DummyNet/ and extract it to `./data`. 
+First, please download sample data and extract it to `./data`. 
 ```
 wget https://data.ciirc.cvut.cz/public/projects/DummyNet/data.tar.gz
 mkdir data
 tar -zxvf data.tar.gz --directory data
 ```
-Then, please extract the weights in `./data/weights` folder.
+Then, extract the weights in `./data/weights` folder.
 ```
 cd data/weights
 tar -zxvf DummyNetAAAI_files.tar.gz
