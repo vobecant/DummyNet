@@ -18,7 +18,7 @@ First, please download sample data and extract it to `./data`.
 ```
 wget https://data.ciirc.cvut.cz/public/projects/DummyNet/data.tar.gz
 mkdir data
-tar -zxvf data.tar.gz --directory data
+tar -zxvf data.tar.gz
 ```
 Then, extract the weights in `./data/weights` folder.
 ```
