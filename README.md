@@ -23,7 +23,7 @@ tar -zxvf data.tar.gz
 ```
 Then, extract the weights in `./data/weights` folder.
 ```
-cd data/weights
+cd weights
 tar -zxvf DummyNetAAAI_files.tar.gz
 ```
 
