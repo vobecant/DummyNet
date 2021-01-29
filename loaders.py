@@ -21,20 +21,18 @@ class SampleLoader(data.Dataset):
     def __getitem__(self, item):
         sample = self.samples[item]
 
-        image_npy = sample['image']
+        app_vec = sample['app_vec']
         mask_npy = sample['mask']
         keypoints_npy = sample['keypoints']
 
-        assert image_npy.max() > 1.0, image_npy.max()
-        image_t = self.to_tensor(image_npy).float()
-        orig_mask_t = torch.from_numpy(mask_npy).clamp_(0, 1).unsqueeze(0).float()
+        app_vec_t = torch.from_numpy(app_vec).unsqueeze(0).float()
+        mask_t = torch.from_numpy(mask_npy).clamp_(0, 1).unsqueeze(0).float()
         keypoints_t = torch.from_numpy(keypoints_npy).clamp_(0, 1).float()
 
-        assert image_t.max() <= 1.0, image_t.max()
-        assert orig_mask_t.max() <= 1.0, orig_mask_t.max()
+        assert mask_t.max() <= 1.0, mask_t.max()
         assert keypoints_t.max() <= 1.0, keypoints_t.max()
 
-        data = {'image': image_t, 'mask': orig_mask_t, 'keypoints': keypoints_t}
+        data = {'app_vec': app_vec_t, 'mask': mask_t, 'keypoints': keypoints_t}
         return data
 
 

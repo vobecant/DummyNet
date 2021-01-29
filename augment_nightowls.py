@@ -15,7 +15,7 @@ from torchvision.transforms import ToPILImage
 from torchvision.transforms import ToTensor
 from torchvision.utils import save_image
 
-from inference_utils import load_networks, encode_appearance, estimate_mask
+from inference_utils import load_networks, estimate_mask
 from models.DummyGAN import KeypointsDownsampler
 from position_proposer import PositionProposer
 
@@ -96,7 +96,7 @@ BATCH_SIZE = 4
 GEN_INPUT_SIZE = 256
 MAX_SIZE_CROP = 300
 OUTPUT_SIZE = 128
-torch.manual_seed(0)
+torch.manual_seed(1)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 KW = 11
@@ -104,8 +104,8 @@ smoothing = GaussianSmoothing(3, KW, 1)
 
 if __name__ == '__main__':
     nets_dir = sys.argv[1]
-    save_dir = sys.argv[2]  # /home/vobecant/datasets/nightowls/generated_training_scenes
-    bb_file = sys.argv[3]  # /home/vobecant/PhD/CSP/data/cache/nightowls/train_h50_nonempty_xyxy
+    save_dir = sys.argv[2]
+    bb_file = sys.argv[3]
     START_SAMPLE_ID = int(sys.argv[4]) if len(sys.argv) > 4 else -1
     END_SAMPLE_ID = int(sys.argv[5]) if len(sys.argv) > 5 else -1
     xyxy_bboxes = True
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     with open('./data/YBB/night_samples.pkl', 'rb') as f:
         dataset = pickle.load(f)
-    loader = iter(DataLoader(dataset, batch_size=1, shuffle=False))
+    loader = iter(DataLoader(dataset, batch_size=1, shuffle=True))
 
     # extended annotations
     bboxes_extended = []
@@ -193,22 +193,22 @@ if __name__ == '__main__':
             try:
                 conditioned_sample = next(loader)
             except StopIteration:
-                loader = iter(DataLoader(dataset, batch_size=1, shuffle=False))
+                loader = iter(DataLoader(dataset, batch_size=1, shuffle=True))
                 conditioned_sample = next(loader)
-            keypoints = conditioned_sample['mask_keypoint'].to(device)
+            keypoints = conditioned_sample['keypoints'].to(device)
+            z = conditioned_sample['app_vec'].to(device)
             skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
-            person = conditioned_sample['image'].to(device)
             sk_y, sk_x = np.where(skeleton)
 
             while len(sk_y) == 0 or len(sk_x) == 0:
                 try:
                     conditioned_sample = next(loader)
                 except StopIteration:
-                    loader = iter(DataLoader(dataset, batch_size=1, shuffle=False))
+                    loader = iter(DataLoader(dataset, batch_size=1, shuffle=True))
                     conditioned_sample = next(loader)
-                keypoints = conditioned_sample['mask_keypoint'].to(device)
+                keypoints = conditioned_sample['keypoints'].to(device)
+                z = conditioned_sample['app_vec'].to(device)
                 skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
-                person = conditioned_sample['image'].to(device)
                 sk_y, sk_x = np.where(skeleton)
 
             with torch.no_grad():
@@ -227,18 +227,12 @@ if __name__ == '__main__':
                 mask = estimate_mask(mask_estimator, me_input_resizer, keypoints)
                 mask_cs = F.interpolate(mask, keypoints.shape[-2:], mode='bilinear')
 
-                # get conditional appearance
-                masked_person = person * mask_cs
-                masked_person_npy = np.asarray(to_pil(masked_person[0].cpu()))
-                z = encode_appearance(encoder, masked_person, 64)
-
                 bg = to_tensor(image_crop).unsqueeze(0).to(device)
                 bg_orig = to_tensor(image_crop_orig).unsqueeze(0).to(device)
                 masked_bg = bg * (1 - mask_cs)
 
                 cond_input = torch.cat((masked_bg, keypoints), dim=1)
                 gen_output = generator(cond_input, z, depth=4, alpha=1.0)
-                # gen_scene = gen_output * mask_cs + masked_bg
                 gen_output_resized = F.interpolate(gen_output, bg_orig.shape[-1], mode='bilinear')
                 mask_resized = F.interpolate(mask_cs, bg_orig.shape[-1], mode='bilinear')
                 gen_scene = gen_output_resized * mask_resized + bg_orig * (1 - mask_resized)

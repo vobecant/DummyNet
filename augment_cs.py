@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import ToTensor, ToPILImage
 from torchvision.utils import save_image
 
-from inference_utils import load_networks, encode_appearance
+from inference_utils import load_networks
 from loaders import get_loader
 from models.DummyGAN import KeypointsDownsampler
 from position_proposer import PositionProposer
@@ -132,14 +132,10 @@ if __name__ == '__main__':
                 conditioned_sample = next(loader)
             keypoints = conditioned_sample['keypoints'].to(device)
             skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
-            person = conditioned_sample['image'].to(device)
             mask = conditioned_sample['mask'].to(device)
-            sk_y, sk_x = np.where(skeleton)
+            z = conditioned_sample['app_vec'].to(device)
 
             with torch.no_grad():
-                # mask = estimate_mask(mask_estimator, me_input_resizer, keypoints)
-                # mask = F.interpolate(mask, keypoints.shape[-2:], mode='bilinear')
-                # skeleton = torch.sum(keypoints, dim=(0, 1)).clamp_(0, 1).cpu().numpy()
                 proposal = position_proposer(image, segmentation, objects_orig, objects_all, skeleton,
                                              mask.squeeze().cpu().numpy())
                 if proposal is None:
@@ -160,16 +156,10 @@ if __name__ == '__main__':
                 # save segmentation
                 cv2.imwrite(fname_segm, augmented_segmentation)
 
-                # get conditional appearance
-                masked_person = person * mask
-                masked_person_npy = np.asarray(to_pil(masked_person[0].cpu()))
-                z = encode_appearance(encoder, masked_person, 64)
-
                 bg = to_tensor(image_crop).unsqueeze(0).to(device)
                 masked_bg = bg * (1 - mask)
                 cond_input = torch.cat((masked_bg, keypoints), dim=1)
                 gen_output = generator(cond_input, z, depth=4, alpha=1.0)
-                # mask = mask**3
                 gen_scene = gen_output * mask + bg * (1 - mask)
                 gen_scene_npy = np.asarray(to_pil(gen_scene[0].to('cpu')))
 
@@ -183,29 +173,6 @@ if __name__ == '__main__':
             # insert person into the scene
             image_aug = np.copy(image)
             image_aug[upper:lower, left:right] = gen_scene_npy
-
-            if SHOW:
-                import matplotlib
-
-                matplotlib.use('tkagg')
-                import matplotlib.pyplot as plt
-
-                fig = plt.figure(figsize=(15, 4))
-                fig.add_subplot(1, 5, 1)
-                plt.imshow(image_crop)
-                fig.add_subplot(1, 5, 2)
-                plt.imshow(skeleton, 'gray')
-                fig.add_subplot(1, 5, 3)
-                plt.imshow(mask.squeeze().numpy(), 'gray')
-                fig.add_subplot(1, 5, 4)
-                plt.imshow(masked_person_npy)
-                fig.add_subplot(1, 5, 5)
-                plt.imshow(gen_scene_npy)
-
-                plt.figure()
-                plt.imshow(image_aug)
-                plt.show()
-                plt.close('all')
 
             # save image
             Image.fromarray(image_aug).save(fname_img)
