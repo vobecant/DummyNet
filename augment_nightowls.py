@@ -20,8 +20,6 @@ from models.DummyGAN import KeypointsDownsampler
 from position_proposer import PositionProposer
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-assert device == 'cuda'
-
 
 class GaussianSmoothing(torch.nn.Module):
     """
