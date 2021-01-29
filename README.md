@@ -16,8 +16,9 @@ to create and activate the new conda environment.
 ## Data
 First, please download sample data and extract it to `./data`. 
 ```
-wget https://data.ciirc.cvut.cz/public/projects/DummyNet/data.tar.gz
 mkdir data
+cd data
+wget https://data.ciirc.cvut.cz/public/projects/DummyNet/data.tar.gz
 tar -zxvf data.tar.gz
 ```
 Then, extract the weights in `./data/weights` folder.
