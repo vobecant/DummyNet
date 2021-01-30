@@ -52,3 +52,26 @@ The script takes three arguments:
 - `weights_dir`: path to the directory with weights
 - `CITYSCAES_DIR`: path to the directory with Cityscapes dataset and CityPersons dataset
 - `SAVE_DIR`: directory where the extended dataset will be saved
+
+
+
+## Using Pose Generator
+To use the Pose Generator, please refer to `README_pose_generator.txt`.
+
+Required packages:
+- numpy 1.16.5
+- matplotlib 3.1.1
+- jsonschema 3.0.2
+- sklearn 0.21.2 (0.21.3 generates warning, but works too)
+- joblib 0.13.2
+
+First, you need to download [joints_pca_etc.npz](https://data.ciirc.cvut.cz/public/projects/DummyNet/joints_pca_etc.npz) and [pca_per_cluster.zip](https://data.ciirc.cvut.cz/public/projects/DummyNet/pca_per_cluster.zip). To do this, you can run
+```
+wget https://data.ciirc.cvut.cz/public/projects/DummyNet/joints_pca_etc.npz
+wget https://data.ciirc.cvut.cz/public/projects/DummyNet/pca_per_cluster.zip
+```
+and unzip it using
+```
+unzip pca_per_cluster.zip
+```
+Then set the paths in `pose_generator.py` and run.
