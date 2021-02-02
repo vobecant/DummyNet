@@ -1,3 +1,6 @@
+Author: David Hurych, david.hurych@gmail.com
+        February 2, 2021
+
 Download data
 1. wget https://data.ciirc.cvut.cz/public/projects/DummyNet/joints_pca_etc.npz
 2. wget https://data.ciirc.cvut.cz/public/projects/DummyNet/pca_per_cluster.zip
