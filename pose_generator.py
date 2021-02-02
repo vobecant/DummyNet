@@ -1,5 +1,7 @@
-import json
+# Author: David Hurych, david.hurych@gmail.com
+#         February 2, 2021
 
+import json
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -140,6 +142,7 @@ def get_abs_pose(joint_list, opt):
     return joint_list.astype(np.int32)
 
 
+# get list of visible joints
 def get_active_joints(active_joints_list, num_of_samples, opt):
     assert (opt['visibility_sampling_strategy'] == 'distribution' or opt[
         'visibility_sampling_strategy'] == 'max'), 'ERROR: unknown visibility_sampling_strategy'
@@ -265,8 +268,7 @@ def generate_skeletons(joints_pca, opt):
         params_min = joints_pca['clusters'][i]['params_min']
         params_diff = params_max - params_min
 
-        active_joints_sampled = get_active_joints(joints_pca['clusters'][i]['active_joints'], samples_per_cluster[i],
-                                                  opt)
+        active_joints_sampled = get_active_joints(joints_pca['clusters'][i]['active_joints'], samples_per_cluster[i], opt)
 
         for j in range(samples_per_cluster[i]):
 
@@ -284,8 +286,7 @@ def generate_skeletons(joints_pca, opt):
             joint_list = get_abs_pose(joint_list, opt)
 
             if opt['vizu'] == True:
-                plot_pose(joint_list, active_joints_sampled[j][:], joints_pca['clusters'][i]['cluster_view'], i, j, fig,
-                          opt)
+                plot_pose(joint_list, active_joints_sampled[j][:], joints_pca['clusters'][i]['cluster_view'], i, j, fig, opt)
 
             data['clusters'][i]['poses'].append([joint_list[:, 0].tolist(), joint_list[:, 1].tolist()])
             data['clusters'][i]['visibility'].append(active_joints_sampled[j].tolist())
@@ -306,19 +307,18 @@ def main():
     opt['scale_height'] = 0.8  # def margins of skeleton from top, down edges wrt n_rows
     opt['save_img'] = False  # save skeleton vizualization? If True, then opt['vizu'] also has to be True to take effect
     opt['load_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12/'  # path to
-    opt[
-        'save_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12/tmp/'  # where to save results
-    opt[
-        'cluster_sampling_strategy'] = 'distribution'  # distribution - each cluster generates a portion of the n samples corresponding
+    opt['save_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12/tmp/'  # where to save results
+    opt['cluster_sampling_strategy'] = 'distribution'  
+    # distribution - each cluster generates a portion of the n samples corresponding
     #                to portion of training samples used to create this cluster
     # uniform - gives more diverse poses. Each cluster generates the same number of samples (except for empty clusters),
     #           smoothly sample from PCA calculated parameters from min to max and take
     #           proportion of samples from clusters where PCA is not calculated (from less than 21 training samples)
-    opt[
-        'visibility_sampling_strategy'] = 'distribution'  # max - takes always the maximum amount of visible joints - valid for cluster with PCA calculated,
+    opt['visibility_sampling_strategy'] = 'distribution'
+    # max - takes always the maximum amount of visible joints - valid for cluster with PCA calculated,
     #       for direct samples it takes always corresponding visibility vector
     # distribution - samples from the real training samples visibility vectors distribution
-    opt['num_of_samples'] = 1000  # actual number of skeletons to generate (non-empty clusters = 25193)
+    opt['num_of_samples'] = 10000  # actual number of skeletons to generate from 25193 (non-empty) pose clusters
 
     np.random.seed(42)
 
