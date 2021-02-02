@@ -64,6 +64,7 @@ Required packages:
 - jsonschema 3.0.2
 - sklearn 0.21.2 (0.21.3 generates warning, but works too)
 - joblib 0.13.2
+- dill 0.3.3
 
 First, you need to download [joints_pca_etc.npz](https://data.ciirc.cvut.cz/public/projects/DummyNet/joints_pca_etc.npz) and [pca_per_cluster.zip](https://data.ciirc.cvut.cz/public/projects/DummyNet/pca_per_cluster.zip). To do this, you can run
 ```
