@@ -88,7 +88,7 @@ if __name__ == '__main__':
         dirs, image_name = os.path.split(image_path)
         city = dirs.split('/')[-1]
 
-        print('\nimage {}/{} {}'.format(sample_id, len(cityscapes_loader), image_path))
+        print('\nimage {}/{} {}'.format(sample_id, len(cityscapes_loader[0]), image_path))
 
         image = np.asarray(image)
         segmentation = np.asarray(segmentation)
