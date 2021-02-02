@@ -75,3 +75,7 @@ and unzip it using
 unzip pca_per_cluster.zip
 ```
 Then set the paths in `pose_generator.py` and run.
+
+
+## Pretrained detector weights.
+You can download CSP detector weights trained on CityPersons dataset [here](https://data.ciirc.cvut.cz/public/projects/DummyNet/csp_best.hdf5)
