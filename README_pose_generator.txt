@@ -14,6 +14,7 @@ matplotlib 3.1.1
 jsonschema 3.0.2
 sklearn 0.21.2 (0.21.3 generates warning, but works too)
 joblib 0.13.2
+dill 0.3.3
 
 Run:
 python pose_generator.py

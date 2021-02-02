@@ -1,10 +1,13 @@
 # Author: David Hurych, david.hurych@gmail.com
 #         February 2, 2021
+#         may be used to generate inputs to our DummyNet https://arxiv.org/pdf/2012.08274.pdf
+#         if you use this code please cite our AAAI 2021 paper
 
 import json
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 # Heatmap indices to find each limb (joint connection). Eg: limb_type=1 is
 # Neck->LShoulder, so joint_to_limb_heatmap_relationship[1] represents the
@@ -13,6 +16,9 @@ joint_to_limb_heatmap_relationship = [
     [1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9], [9, 10],
     [1, 11], [11, 12], [12, 13], [1, 0], [0, 14], [14, 16], [0, 15], [15, 17],
     [2, 16], [5, 17]]
+
+# remove neck - as it was used in Dummynet
+JOINTS_SELECTION = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10 ,11 ,12, 13, 14, 15, 16, 17]
 
 NUM_JOINTS = 18
 NUM_LIMBS = len(joint_to_limb_heatmap_relationship)
@@ -42,8 +48,9 @@ def plot_pose(joint_list, active_joints, view_clust, pose_num, id, fig, opt):
     # Last 2 limbs connect ears with shoulders and this looks very weird.
     # Disabled by default to be consistent with original rtpose output
     which_limbs_to_plot = NUM_LIMBS if plot_ear_to_shoulder else NUM_LIMBS - 2
+    person_joint_info = person_to_joint_assoc[:]
+    
     for limb_type in range(which_limbs_to_plot):
-        person_joint_info = person_to_joint_assoc[:]
         joint_indices = person_joint_info[joint_to_limb_heatmap_relationship[limb_type]].astype(int)
 
         if -1 in joint_indices:
@@ -252,17 +259,17 @@ def generate_skeletons(joints_pca, opt):
                     plot_pose(joint_list, joints_pca['clusters'][i]['active_joints'][rand_idx[j]][:],
                               joints_pca['clusters'][i]['cluster_view'], i, j, fig, opt)
 
-                data['clusters'][i]['poses'].append([joint_list[:, 0].tolist(), joint_list[:, 1].tolist()])
-                data['clusters'][i]['visibility'].append(
-                    (joints_pca['clusters'][i]['active_joints'][rand_idx[j]].astype(int)).tolist())
+                # JOINTS_SELECTION - removes neck "joint"
+                data['clusters'][i]['poses'].append([joint_list[JOINTS_SELECTION, 0].tolist(), joint_list[JOINTS_SELECTION, 1].tolist()]) # [x_list, y_list]
+                data['clusters'][i]['visibility'].append((joints_pca['clusters'][i]['active_joints'][rand_idx[j]][JOINTS_SELECTION].astype(int)).tolist())
 
             continue
 
         data['larger_than_20'].append(i)
 
         # load scaler and pca
-        scaler = joblib.load(opt['load_path'] + 'pca_per_cluster/sclaer_obj_%6.6i' % i)
-        pca = joblib.load(opt['load_path'] + 'pca_per_cluster/pca_obj_%6.6i' % i)
+        scaler = joblib.load(os.path.join(opt['load_path'], 'pca_per_cluster/sclaer_obj_%6.6i' % i))
+        pca = joblib.load(os.path.join(opt['load_path'], 'pca_per_cluster/pca_obj_%6.6i' % i))
 
         params_max = joints_pca['clusters'][i]['params_max']
         params_min = joints_pca['clusters'][i]['params_min']
@@ -288,8 +295,9 @@ def generate_skeletons(joints_pca, opt):
             if opt['vizu'] == True:
                 plot_pose(joint_list, active_joints_sampled[j][:], joints_pca['clusters'][i]['cluster_view'], i, j, fig, opt)
 
-            data['clusters'][i]['poses'].append([joint_list[:, 0].tolist(), joint_list[:, 1].tolist()])
-            data['clusters'][i]['visibility'].append(active_joints_sampled[j].tolist())
+            # JOINTS_SELECTION - removes neck "joint"
+            data['clusters'][i]['poses'].append([joint_list[JOINTS_SELECTION, 0].tolist(), joint_list[JOINTS_SELECTION, 1].tolist()]) # [x_list, y_list]
+            data['clusters'][i]['visibility'].append(active_joints_sampled[j][JOINTS_SELECTION].tolist())
 
     print('Empty clusters = ' + str(len(data['equal_to_0'])))
     print('Clusters with direct samples = ' + str(len(data['between_0_20'])))
@@ -299,15 +307,15 @@ def generate_skeletons(joints_pca, opt):
 
 def main():
     opt = {}
-    opt['save'] = True  # save generated list of skeletons?
+    opt['save'] = True  # save generated list of poses?
     opt['save_suffix'] = ''
     opt['vizu'] = True  # vizualize generated samples?
     opt['n_rows'] = 256  # height
     opt['n_cols'] = 256  # width
     opt['scale_height'] = 0.8  # def margins of skeleton from top, down edges wrt n_rows
-    opt['save_img'] = False  # save skeleton vizualization? If True, then opt['vizu'] also has to be True to take effect
-    opt['load_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12/'  # path to
-    opt['save_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12/tmp/'  # where to save results
+    opt['save_img'] = False  # save pose vizualization? If True, then opt['vizu'] also has to be True to take effect
+    opt['load_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12'  # path to
+    opt['save_path'] = 'D:/data/dummynet/clustering_results_unique_vid_tst_exp2_2019-11-12/tmp'  # where to save results
     opt['cluster_sampling_strategy'] = 'distribution'  
     # distribution - each cluster generates a portion of the n samples corresponding
     #                to portion of training samples used to create this cluster
@@ -318,32 +326,32 @@ def main():
     # max - takes always the maximum amount of visible joints - valid for cluster with PCA calculated,
     #       for direct samples it takes always corresponding visibility vector
     # distribution - samples from the real training samples visibility vectors distribution
-    opt['num_of_samples'] = 10000  # actual number of skeletons to generate from 25193 (non-empty) pose clusters
+    opt['num_of_samples'] = 10000 # actual number of poses to generate from 25193 (non-empty) pose clusters
 
     np.random.seed(42)
 
     # load data
     print('loading data ...')
     np_load_old = np.load
-    np.load = lambda *a, **k: np_load_old(*a, allow_pickle=True, **k)
-    data = np.load(opt['load_path'] + 'joints_pca_etc.npz')
-
-    keys = []
-    vals = []
+    np.load = lambda *a,**k: np_load_old(*a, allow_pickle=True, **k)
+    data = np.load(os.path.join(opt['load_path'], 'joints_pca_etc.npz'))
+    
+    keys=[]
+    vals=[]
     for value in data['arr_0'].item():
-        key = value
-        values = data['arr_0'].item()[value]
+        key=value
+        values=data['arr_0'].item()[value]
         keys.append(key)
         vals.append(values)
-
-    joints_pca = dict(zip(keys, vals))
+        
+    joints_pca=dict(zip(keys,vals))
     print('loaded')
 
     # run pose generator
     poses = generate_skeletons(joints_pca, opt)
-
+    
     if opt['save']:
-        with open(opt['save_path'] + 'generated_skeletons' + opt['save_suffix'] + '.json', 'w') as outfile:
+        with open(os.path.join(opt['save_path'], ('generated_skeletons' + opt['save_suffix'] + '.json')), 'w') as outfile:
             json.dump(poses, outfile)
 
 
