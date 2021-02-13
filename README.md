@@ -1,6 +1,8 @@
 # DummyNet
 Official implementation of paper "Artificial Dummies for Urban Dataset Augmentation". [[arXiv paper]](https://arxiv.org/abs/2012.08274)
 
+Videos can be found [here](https://virtual.2021.aaai.org/paper_AAAI-9933.html).
+
 ## Setup
 **Note**: The code is tested only on Linux distributions.
 
