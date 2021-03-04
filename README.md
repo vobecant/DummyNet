@@ -1,5 +1,16 @@
 # DummyNet
-Official implementation of paper "Artificial Dummies for Urban Dataset Augmentation". [[arXiv paper]](https://arxiv.org/abs/2012.08274)
+Official implementation of paper "Artificial Dummies for Urban Dataset Augmentation" accepted to **AAAI 2021**. 
+[[arXiv paper]](https://arxiv.org/abs/2012.08274)
+
+```
+@inproceedings{vobecky2021artificial,
+    title={Artificial Dummies for Urban Dataset Augmentation},
+    author={Vobeck{\'y}, Anton{\'i}n and Hurych, David and U{\vr}i{\vc}{\'a}{\vr}, Michal and P{\'e}rez, Patrick and Sivic, Josef},
+    booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+    pages={0--0},
+    year={2021}
+}
+```
 
 Videos can be found [here](https://virtual.2021.aaai.org/paper_AAAI-9933.html).
 
